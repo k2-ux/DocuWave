@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "362138454499",
+    "project_id": "docuwave-d629d",
+    "storage_bucket": "docuwave-d629d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:362138454499:android:9b27164e39c36edc0838d6",
+        "android_client_info": {
+          "package_name": "com.docuwave"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRbmlvX_nxEmqHOlEl3e03zT0e2-G8fUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
