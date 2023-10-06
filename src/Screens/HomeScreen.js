@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
+  Button
 } from 'react-native';
 import {useLayoutEffect} from 'react';
 import {StackActions} from '@react-navigation/native';
@@ -16,6 +17,7 @@ import fetchDataFromTable from '../components/fetchDataFromTable';
 import {useIsFocused} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
+import DrawerNavigator from '../Navigators/DrawerNavigator';
 const dbase = openDatabase({name: 'rn_lite'});
 const HomeScreen = ({route, navigation}) => {
   console.log('WWWWWWWWWWWWWWWWWWW', route);
@@ -164,26 +166,28 @@ const HomeScreen = ({route, navigation}) => {
         },
         error => {
           console.error('Error updating data:', error);
-          // errorCallback(error);
         },
       );
     });
   };
   return (
+    // <View>
     <View
       style={{
         flex: 1,
-        // alignSelf: 'flex-end',
-        // justifyContent: 'flex-end',
-        // backgroundColor:'gray',
 
         margin: 15,
       }}>
+     
       <FlatList
         data={documentary}
         keyExtractor={item => item.id.toString()}
         renderItem={({item}) => (
-          <TouchableOpacity onPress={()=>{navigation.navigate('Utelly')}} onLongPress={() => handleEditdata(item.id)}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Utelly');
+            }}
+            onLongPress={() => handleEditdata(item.id)}>
             <View
               style={{
                 flexDirection: 'row',
@@ -193,7 +197,6 @@ const HomeScreen = ({route, navigation}) => {
                 backgroundColor: '#F9E995',
                 borderRadius: 5,
               }}>
-              {/* Add the delete icon */}
               <TouchableOpacity
                 onPress={() => handleDelete(item.id)}
                 style={{position: 'absolute', top: 5, right: 5}}>
@@ -224,12 +227,6 @@ const HomeScreen = ({route, navigation}) => {
           style={styles.plus}
           onPress={() => {
             handleLogout();
-            // auth()
-            //   .signOut()
-            //   .then(() => {console.log('User signed out!')
-            //   navigation.dispatch(StackActions.replace("Login"))
-            // }
-            //   );
           }}>
           <Icon name="log-out" size={30} color="white" />
         </TouchableOpacity>
@@ -242,6 +239,7 @@ const HomeScreen = ({route, navigation}) => {
         initialData={selectedItem}
       />
     </View>
+    // </View>
   );
 };
 

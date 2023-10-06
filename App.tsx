@@ -6,6 +6,8 @@ import Login from './src/Screens/Login';
 import LoginNavigator from './src/Navigators/LoginNavigator';
 import createTables from './src/components/createTables';
 import auth from '@react-native-firebase/auth';
+import DrawerNavigator from './src/Navigators/DrawerNavigator';
+import { NavigationContainer } from '@react-navigation/native';
 
 
 
@@ -40,7 +42,9 @@ const App = () => {
     createTables();
   }, []);
   return (
+    <>
    <LoginNavigator logged={initialscreen}/>
+   </>
   );
 };
 

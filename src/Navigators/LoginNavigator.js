@@ -7,6 +7,7 @@ import Registration from '../Screens/Registration';
 import HomeScreen from '../Screens/HomeScreen';
 import auth from '@react-native-firebase/auth';
 import Utelly from '../Screens/Utelly';
+import DrawerNavigator from './DrawerNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,9 +59,9 @@ const LoginNavigator = ({logged}) => {
         />
          <Stack.Screen
           name="Home"
-          component={HomeScreen}
+          component={DrawerNavigator}
           options={{
-            // headerShown:false,
+            headerShown:false,
             headerTitle: 'DocuWave',
             headerBackVisible: false,
             headerTitleAlign: 'center',
@@ -72,7 +73,7 @@ const LoginNavigator = ({logged}) => {
           options={{
             // headerShown:false,
             // headerTitle: 'DocuWave',
-            headerBackVisible: false,
+            // headerBackVisible: false,
             headerTitleAlign: 'center',
           }}
         />
