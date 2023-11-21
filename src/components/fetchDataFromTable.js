@@ -16,7 +16,7 @@ const fetchDataFromTable = () => {
             data.push(row);
           }
           resolve(data);
-          console.log(data)
+          console.log('The whole IS here',data)
         },
         (error) => {
           reject(error);

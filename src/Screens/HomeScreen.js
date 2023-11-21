@@ -5,11 +5,11 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
-  Button
+  Button,
 } from 'react-native';
 import {useLayoutEffect} from 'react';
 import {StackActions} from '@react-navigation/native';
-
+import { addDocumentaries } from '../Redux/Actions/Actions';
 import React, {useEffect, useState} from 'react';
 import {openDatabase} from 'react-native-sqlite-storage';
 import FormComponent from '../components/FormComponent';
@@ -17,10 +17,18 @@ import fetchDataFromTable from '../components/fetchDataFromTable';
 import {useIsFocused} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
-import DrawerNavigator from '../Navigators/DrawerNavigator';
+import { useSelector,useDispatch } from 'react-redux';
+import Header from '../components/Header';
+import { theme } from '../components/theme';
+// import DrawerNavigator from '../Navigators/DrawerNavigator';
 const dbase = openDatabase({name: 'rn_lite'});
+
 const HomeScreen = ({route, navigation}) => {
+  const dispatch = useDispatch()
+
   console.log('WWWWWWWWWWWWWWWWWWW', route);
+  const documentaries = useSelector(state=>state.documentary)
+  console.log('DOCUMENTARIES',documentaries)
   const [documentary, setDocumentary] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showTrue, setshowTrue] = useState(false);
@@ -39,11 +47,12 @@ const HomeScreen = ({route, navigation}) => {
   // }, [])
 
   const handleSaveData = data => {
-    console.log(data);
+    console.log('going to add this data',data);
+// dispatch(addDocumentaries(data.name))
     dbase.transaction(tx => {
       tx.executeSql(
-        'INSERT INTO documentaries (name, genre, language, year) VALUES (?, ?, ?, ?)',
-        [data.name, data.genre, data.language, data.year],
+        'INSERT INTO documentaries (name, watchState, language, year) VALUES (?, ?, ?, ?)',
+        [data.name, data.watchState, data.language, data.year],
         (_, results) => {
           console.log('Data saved successfully', results);
         },
@@ -158,10 +167,12 @@ const HomeScreen = ({route, navigation}) => {
   const handleEdit = data => {
     dbase.transaction(tx => {
       tx.executeSql(
-        'UPDATE documentaries SET name =?,genre = ?, language = ?, year = ? WHERE id= ?',
-        [data.name, data.genre, data.language, data.year, selectedItem.id],
+        'UPDATE documentaries SET name =?,watchState = ?, language = ?, year = ? WHERE id= ?',
+        [data.name, data.watchState, data.language, data.year, selectedItem.id],
         (_, results) => {
           console.log('Data updated successfully', results);
+          setSelectedItem(null);
+
           // successCallback(results);
         },
         error => {
@@ -178,14 +189,18 @@ const HomeScreen = ({route, navigation}) => {
 
         margin: 15,
       }}>
-     
+      {/* <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
+        <Icon name="menu" size={20} />
+      </TouchableOpacity> */}
+      <Header onClickLeftIcon={() => navigation.toggleDrawer()} title={'Home'}/>
+
       <FlatList
         data={documentary}
         keyExtractor={item => item.id.toString()}
         renderItem={({item}) => (
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('Utelly');
+              // navigation.navigate('Utelly');
             }}
             onLongPress={() => handleEditdata(item.id)}>
             <View
@@ -205,13 +220,13 @@ const HomeScreen = ({route, navigation}) => {
 
               <View style={{}}>
                 <Text style={styles.Text}>Name: </Text>
-                <Text style={styles.Text}>Genre: </Text>
+                <Text style={styles.Text}>Status: </Text>
                 <Text style={styles.Text}>Language: </Text>
                 <Text style={styles.Text}>Year: </Text>
               </View>
               <View style={{marginLeft: 10}}>
                 <Text style={styles.Text2}> {item.name}</Text>
-                <Text style={styles.Text2}> {item.genre}</Text>
+                <Text style={styles.Text2}> {item.watchState}</Text>
                 <Text style={styles.Text2}> {item.language}</Text>
                 <Text style={styles.Text2}> {item.year}</Text>
               </View>
@@ -223,13 +238,13 @@ const HomeScreen = ({route, navigation}) => {
         <TouchableOpacity style={styles.plus} onPress={() => addDocumentary()}>
           <Text style={{fontSize: 24, color: 'white'}}>+</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.plus}
           onPress={() => {
             handleLogout();
           }}>
           <Icon name="log-out" size={30} color="white" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <FormComponent
@@ -250,14 +265,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 40,
-    backgroundColor: 'purple',
+    backgroundColor: theme.main,
     alignItems: 'center',
     justifyContent: 'center',
   },
   Text: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#7861AA',
+    color: theme.main,
   },
   Text2: {
     fontSize: 18,

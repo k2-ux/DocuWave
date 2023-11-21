@@ -6,7 +6,7 @@ const dbase = openDatabase({name: 'rn_lite'});
 const createTables = () => {
     dbase.transaction(txn => {
       txn.executeSql(
-        'CREATE TABLE IF NOT EXISTS documentaries(id INTEGER PRIMARY KEY AUTOINCREMENT,name VARCHAR(20),genre VARCHAR(55),language VARCHAR(20),year VARCHAR(20))',
+        'CREATE TABLE IF NOT EXISTS documentaries(id INTEGER PRIMARY KEY AUTOINCREMENT,name VARCHAR(20),watchState VARCHAR(55),language VARCHAR(20),year VARCHAR(20))',
         [],
         (_, results) => {
           console.log('table created successfully');

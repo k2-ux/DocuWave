@@ -12,6 +12,9 @@ import {
 import { StackActions } from '@react-navigation/native';
 // import PoetsenOne-Regular from '../../assets/font'
 import auth from '@react-native-firebase/auth';
+
+import { SvgUri } from 'react-native-svg';
+import { theme } from '../components/theme';
 const {height, width} = Dimensions.get('screen');
 export default function Login({navigation}) {
   const [email, setemail] = useState('')
@@ -50,6 +53,11 @@ try {
   return (
     <View style={styles.container}>
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
+      {/* <SvgUri
+        width="200"
+        height="200"
+        source={require('../../assets/logo.svg')}
+      /> */}
       <Text style={styles.welcomeText}>Welcome</Text>
       <TextInput
       onChangeText={(text)=>setemail(text)}
@@ -84,12 +92,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9E995',
+    // backgroundColor: '#F9E995',
+    backgroundColor : theme.background
   },
   button: {
     width: width * 0.45,
     height: height * 0.05,
-    backgroundColor: '#7861AA',
+    backgroundColor: theme.main,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
@@ -97,16 +106,17 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: 100,
-    height: 100,
+    height: 95,
     marginBottom: 20,
-    borderRadius: 20,
+    // borderRadius: 20,
+    
   },
   welcomeText: {
     fontSize: 40,
     fontWeight: 'bold',
     marginBottom: 20,
     fontFamily: 'PoetsenOne-Regular',
-    color: '#7861AA',
+    color: theme.main
   },
   input: {
     width: width * 0.9,

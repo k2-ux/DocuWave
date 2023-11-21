@@ -6,8 +6,10 @@ import Login from '../Screens/Login';
 import Registration from '../Screens/Registration';
 import HomeScreen from '../Screens/HomeScreen';
 import auth from '@react-native-firebase/auth';
-import Utelly from '../Screens/Utelly';
+import Utelly from '../Screens/ExploreMovies';
 import DrawerNavigator from './DrawerNavigator';
+import DocumentaryDetail from '../Screens/DocumentaryDetail';
+import ExploreMovies from '../Screens/ExploreMovies';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,11 +70,21 @@ const LoginNavigator = ({logged}) => {
           }}
         />
          <Stack.Screen
-          name="Utelly"
-          component={Utelly}
+          name="ExploreMovies"
+          component={ExploreMovies}
           options={{
             // headerShown:false,
             // headerTitle: 'DocuWave',
+            // headerBackVisible: false,
+            headerTitleAlign: 'center',
+          }}
+        />
+         <Stack.Screen
+          name="DocumentaryDetail"
+          component={DocumentaryDetail}
+          options={{
+            // headerShown:false,
+            headerTitle: 'Details',
             // headerBackVisible: false,
             headerTitleAlign: 'center',
           }}

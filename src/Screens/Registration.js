@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 // import PoetsenOne-Regular from '../../assets/font'
 import auth from '@react-native-firebase/auth';
-
 const {height, width} = Dimensions.get('screen');
 export default function Registration({navigation}) {
   const [email, setemail] = useState('');
@@ -38,7 +37,8 @@ export default function Registration({navigation}) {
   return (
     <View style={styles.container}>
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
-      <Text style={styles.welcomeText}>Registration</Text>
+      
+          <Text style={styles.welcomeText}>Registration</Text>
       <TextInput
         onChangeText={text => setemail(text)}
         placeholder="Email"
@@ -82,10 +82,10 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
     marginBottom: 20,
-    borderRadius: 20,
+    // borderRadius: 0,
   },
   welcomeText: {
     fontSize: 40,

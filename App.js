@@ -8,9 +8,8 @@ import createTables from './src/components/createTables';
 import auth from '@react-native-firebase/auth';
 import DrawerNavigator from './src/Navigators/DrawerNavigator';
 import { NavigationContainer } from '@react-navigation/native';
-
-
-
+import {Provider, useSelector} from 'react-redux';
+import { store } from './src/Redux/Store/store';
  
 const App = () => {
   const [isUserLoggedin, setIsUserLoggedIn] = useState(false);
@@ -42,10 +41,10 @@ const App = () => {
     createTables();
   }, []);
   return (
-    <>
+  <Provider store={store}>
    <LoginNavigator logged={initialscreen}/>
-   </>
-  );
+ </Provider>  
+);
 };
 
 export default App;
