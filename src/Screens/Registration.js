@@ -23,14 +23,14 @@ export default function Registration({navigation}) {
         email,
         password,
       );
-      console.log('Oiiiiiiiiiiii', isUserCreated);
+      console.log('THE USER IS CREATED', isUserCreated);
       navigation.navigate('Login')}
       else {
         Alert.alert('please enter some data')
       }
     } catch (error) {
-      console.log(error);
-      Alert.alert('enter valid credentials');
+      console.log(error.code);
+      Alert.alert('enter valid credentials',error.code);
     }
   };
 

@@ -13,13 +13,12 @@ import ExploreMovies from '../Screens/ExploreMovies';
 
 const Stack = createNativeStackNavigator();
 
-const LoginNavigator = ({logged}) => {
+const LoginNavigator = () => {
   const [isUserLoggedin, setIsUserLoggedIn] = useState(false);
   const [initialscreen, setinitialscreen] = useState("Loading");
-  console.log('sdsdsdsdsds', logged);
   const unsubscribe = () => {
     auth().onAuthStateChanged(user => {
-      console.log(user);
+      console.log('user DETAIL',user);
       if (user) {
         setIsUserLoggedIn(true);
         setinitialscreen('Home');

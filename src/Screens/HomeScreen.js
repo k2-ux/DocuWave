@@ -7,9 +7,7 @@ import {
   Alert,
   Button,
 } from 'react-native';
-import {useLayoutEffect} from 'react';
 import {StackActions} from '@react-navigation/native';
-import { addDocumentaries } from '../Redux/Actions/Actions';
 import React, {useEffect, useState} from 'react';
 import {openDatabase} from 'react-native-sqlite-storage';
 import FormComponent from '../components/FormComponent';
@@ -17,21 +15,18 @@ import fetchDataFromTable from '../components/fetchDataFromTable';
 import {useIsFocused} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
-import { useSelector,useDispatch } from 'react-redux';
 import Header from '../components/Header';
-import { theme } from '../components/theme';
-// import DrawerNavigator from '../Navigators/DrawerNavigator';
+import {theme} from '../components/theme';
+import {useNetInfo} from '@react-native-community/netinfo';
+import firestore from '@react-native-firebase/firestore';
 const dbase = openDatabase({name: 'rn_lite'});
 
 const HomeScreen = ({route, navigation}) => {
-  const dispatch = useDispatch()
-
   console.log('WWWWWWWWWWWWWWWWWWW', route);
-  const documentaries = useSelector(state=>state.documentary)
-  console.log('DOCUMENTARIES',documentaries)
   const [documentary, setDocumentary] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showTrue, setshowTrue] = useState(false);
+  const [userID, setuserID] = useState('');
   const isFocused = useIsFocused();
   const addDocumentary = () => {
     setshowTrue(true);
@@ -39,16 +34,22 @@ const HomeScreen = ({route, navigation}) => {
   const handleCloseForm = () => {
     setshowTrue(false);
   };
-  // useLayoutEffect(() => {
+  const {type, isConnected} = useNetInfo();
+  console.log('NETINFO', type, isConnected);
 
-  //   return () => {
+  const unsubscribe = () => {
+    auth().onAuthStateChanged(user => {
+      console.log('user DETAIL', user);
+      setuserID(user.uid);
+    });
+  };
 
-  //   }
-  // }, [])
+  useEffect(() => {
+    unsubscribe();
+  }, []);
 
   const handleSaveData = data => {
-    console.log('going to add this data',data);
-// dispatch(addDocumentaries(data.name))
+    console.log('going to add this data', data);
     dbase.transaction(tx => {
       tx.executeSql(
         'INSERT INTO documentaries (name, watchState, language, year) VALUES (?, ?, ?, ?)',
@@ -73,6 +74,27 @@ const HomeScreen = ({route, navigation}) => {
         console.error('Error fetching data:', error);
       });
   }, [isFocused, showTrue]);
+  console.log('DOCUMENTARIES', documentary);
+
+  useEffect(() => {
+    if (documentary.length > 0) {
+      firestore()
+        .collection('documentaries')
+        .doc(userID)
+        .set({
+          watchlist: documentary,
+        })
+        .then(() => {
+          console.log('User watchlist added to Firestore!');
+        })
+        .catch(error => {
+          console.error('Error adding user watchlist to Firestore:', error);
+        });
+    } else {
+      console.log('No documents in array');
+    }
+  }, [documentary, userID]);
+
   const handleDelete = itemId => {
     Alert.alert('Hey', 'Do you want to delete?', [
       {
@@ -186,13 +208,17 @@ const HomeScreen = ({route, navigation}) => {
     <View
       style={{
         flex: 1,
-
-        margin: 15,
+        backgroundColor: 'white',
+        // margin: 15,
+        padding: 15,
       }}>
       {/* <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
         <Icon name="menu" size={20} />
       </TouchableOpacity> */}
-      <Header onClickLeftIcon={() => navigation.toggleDrawer()} title={'Home'}/>
+      <Header
+        onClickLeftIcon={() => navigation.toggleDrawer()}
+        title={'Home'}
+      />
 
       <FlatList
         data={documentary}
@@ -209,7 +235,7 @@ const HomeScreen = ({route, navigation}) => {
                 borderWidth: 1,
                 marginBottom: 5,
                 borderColor: 'black',
-                backgroundColor: '#F9E995',
+                backgroundColor: '#ADF7B6',
                 borderRadius: 5,
               }}>
               <TouchableOpacity
@@ -218,7 +244,7 @@ const HomeScreen = ({route, navigation}) => {
                 <Icon name="trash-outline" size={24} color="black" />
               </TouchableOpacity>
 
-              <View style={{}}>
+              <View style={{padding: 3}}>
                 <Text style={styles.Text}>Name: </Text>
                 <Text style={styles.Text}>Status: </Text>
                 <Text style={styles.Text}>Language: </Text>
@@ -272,10 +298,11 @@ const styles = StyleSheet.create({
   Text: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: theme.main,
+    color: '#00A676',
+    fontStyle: 'italic',
   },
   Text2: {
     fontSize: 18,
-    color: 'gray',
+    color: 'black',
   },
 });

@@ -12,37 +12,21 @@ import {Provider, useSelector} from 'react-redux';
 import { store } from './src/Redux/Store/store';
  
 const App = () => {
-  const [isUserLoggedin, setIsUserLoggedIn] = useState(false);
-  const [initialscreen, setinitialscreen] = useState('');
+  
   useEffect(() => {
     setTimeout(() => {
       SplashScreen.hide();
     }, 1500);
   }, []);
 
-  const unsubscribe =  () => {
-    auth().onAuthStateChanged(user => {
-       console.log(user);
-       if (user) {
-         setIsUserLoggedIn(true);
-         setinitialscreen("Home");
-       } else {
-         setIsUserLoggedIn(false);
-         setinitialscreen("Login");
-       }
-     });
-   };
  
-   useEffect(() => {
-     unsubscribe();
-   }, []);
  
   useEffect(() => {
     createTables();
   }, []);
   return (
   <Provider store={store}>
-   <LoginNavigator logged={initialscreen}/>
+   <LoginNavigator/>
  </Provider>  
 );
 };
