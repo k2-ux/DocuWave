@@ -1,140 +1,181 @@
-import React,{useState} from 'react';
+import React, {useState} from 'react';
 import {
-  Image,
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StatusBar,
   Alert,
+  ScrollView,
 } from 'react-native';
-import { StackActions } from '@react-navigation/native';
-// import PoetsenOne-Regular from '../../assets/font'
+import {StackActions} from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
+import {theme} from '../components/theme';
 
-import { SvgUri } from 'react-native-svg';
-import { theme } from '../components/theme';
-const {height, width} = Dimensions.get('screen');
+const {width} = Dimensions.get('window');
+
 export default function Login({navigation}) {
-  const [email, setemail] = useState('')
-const [password, setpassword] = useState('')
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Missing fields', 'Please enter your email and password.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await auth().signInWithEmailAndPassword(email, password);
+      navigation.dispatch(StackActions.replace('Home'));
+    } catch (error) {
+      Alert.alert('Login failed', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleLogin =  async ()=>{
-try {
-  if (email.length>0 && password.length>0){
-  const isUserRegistered = await auth().signInWithEmailAndPassword(email,password)
-  console.log(isUserRegistered)
-  // navigation.navigate('Home',{
-  //   email:isUserRegistered.user.email,
-  //   uid:isUserRegistered.user.uid
-  // })
-  navigation.dispatch(StackActions.replace("Home"))
-
-}
-
-  else {
-    Alert.alert('please enter some data')
-  }
-
-} catch (error) {
-  // if (error.code === 'auth/email-already-in-use') {
-  //  Alert.alert('That email address is already in use!');
-  // }
-
-  // if (error.code === 'auth/invalid-email') {
-  //  Alert.alert('That email address is invalid!');
-  // }
-
-  console.error(error);
-}
-}
   return (
-    <View style={styles.container}>
-      <Image source={require('../../assets/logo.png')} style={styles.logo} />
-      {/* <SvgUri
-        width="200"
-        height="200"
-        source={require('../../assets/logo.svg')}
-      /> */}
-      <Text style={styles.welcomeText}>Welcome</Text>
-      <TextInput
-      onChangeText={(text)=>setemail(text)}
-        placeholder="Email"
-        style={styles.input}
-        value={email}
-      />
-      <TextInput
-        placeholder="Password"
-        onChangeText={(text)=>setpassword(text)}
-        secureTextEntry
-        style={styles.input}
-        value={password}
-      />
-      <View style={styles.button}>
-        <TouchableOpacity onPress={() =>handleLogin()}>
-          <Text style={{color: 'white', fontSize: 18}}>Submit</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.bg} />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <Image source={require('../../assets/logo.png')} style={styles.logo} />
+        <Text style={styles.appName}>DocuWave</Text>
+        <Text style={styles.tagline}>Your documentary companion</Text>
+
+        <View style={styles.form}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="you@example.com"
+            placeholderTextColor={theme.textDim}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            placeholderTextColor={theme.textDim}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TouchableOpacity
+            style={[styles.button, loading && {opacity: 0.6}]}
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.85}>
+            <Text style={styles.buttonText}>
+              {loading ? 'Signing in…' : 'Sign In'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Registration')}
+          style={styles.linkContainer}>
+          <Text style={styles.link}>
+            Don't have an account?{' '}
+            <Text style={styles.linkAccent}>Sign up</Text>
+          </Text>
         </TouchableOpacity>
-      </View>
-      <TouchableOpacity>
-        <Text style={styles.forgotPassword}>Forgot Password?</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Registration')}>
-        <Text style={styles.signUp}>Not registered yet? Sign up here</Text>
-      </TouchableOpacity>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // backgroundColor: '#F9E995',
-    backgroundColor : theme.background
+    backgroundColor: theme.bg,
   },
-  button: {
-    width: width * 0.45,
-    height: height * 0.05,
-    backgroundColor: theme.main,
-    justifyContent: 'center',
+  scroll: {
+    flexGrow: 1,
     alignItems: 'center',
-    borderRadius: 10,
-    marginVertical: 10,
+    justifyContent: 'center',
+    paddingHorizontal: width * 0.07,
+    paddingVertical: 40,
   },
   logo: {
     width: 100,
-    height: 95,
-    marginBottom: 20,
-    // borderRadius: 20,
-    
+    height: 100,
+    marginBottom: 16,
+    resizeMode: 'contain',
   },
-  welcomeText: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  appName: {
+    fontSize: 36,
+    color: theme.primary,
     fontFamily: 'PoetsenOne-Regular',
-    color: theme.main
+    letterSpacing: 1.5,
+  },
+  tagline: {
+    fontSize: 13,
+    color: theme.textMuted,
+    marginBottom: 44,
+    marginTop: 6,
+    letterSpacing: 0.8,
+  },
+  form: {
+    width: '100%',
+    marginBottom: 28,
+  },
+  label: {
+    color: theme.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    marginTop: 20,
   },
   input: {
-    width: width * 0.9,
-    height: height * 0.05,
-    borderColor: 'gray',
+    width: '100%',
+    height: 52,
+    backgroundColor: theme.surface,
     borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
-    marginBottom: 10,
-    backgroundColor: 'white',
+    borderColor: theme.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    color: theme.text,
+    fontSize: 15,
   },
-  forgotPassword: {
-    color: 'gray',
-    // textDecorationLine: 'underline',
-    marginBottom: 10,
+  button: {
+    width: '100%',
+    height: 54,
+    backgroundColor: theme.primary,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
   },
-  signUp: {
-    color: '#7861AA',
-    // textDecorationLine: 'underline',
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  linkContainer: {
+    paddingVertical: 8,
+  },
+  link: {
+    color: theme.textMuted,
+    fontSize: 14,
+  },
+  linkAccent: {
+    color: theme.primary,
+    fontWeight: '700',
   },
 });

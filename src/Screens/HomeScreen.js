@@ -5,10 +5,9 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
-  Button,
+  StatusBar,
 } from 'react-native';
-import {StackActions} from '@react-navigation/native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {openDatabase} from 'react-native-sqlite-storage';
 import FormComponent from '../components/FormComponent';
 import fetchDataFromTable from '../components/fetchDataFromTable';
@@ -19,144 +18,96 @@ import Header from '../components/Header';
 import {theme} from '../components/theme';
 import {useNetInfo} from '@react-native-community/netinfo';
 import firestore from '@react-native-firebase/firestore';
+
 const dbase = openDatabase({name: 'rn_lite'});
 
-const HomeScreen = ({route, navigation}) => {
-  console.log('WWWWWWWWWWWWWWWWWWW', route);
+const stateColor = watchState => {
+  if (watchState === 'watched') return theme.success;
+  if (watchState === 'will watch') return theme.warning;
+  return theme.border;
+};
+
+const HomeScreen = ({navigation}) => {
   const [documentary, setDocumentary] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [showTrue, setshowTrue] = useState(false);
-  const [userID, setuserID] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [userID, setUserID] = useState('');
   const isFocused = useIsFocused();
-  const addDocumentary = () => {
-    setshowTrue(true);
-  };
-  const handleCloseForm = () => {
-    setshowTrue(false);
-  };
-  const {type, isConnected} = useNetInfo();
-  console.log('NETINFO', type, isConnected);
-
-  const unsubscribe = () => {
-    auth().onAuthStateChanged(user => {
-      console.log('user DETAIL', user);
-      setuserID(user.uid);
-    });
-  };
+  const {isConnected} = useNetInfo();
 
   useEffect(() => {
-    unsubscribe();
+    return auth().onAuthStateChanged(user => {
+      if (user) setUserID(user.uid);
+    });
   }, []);
 
+  useEffect(() => {
+    fetchDataFromTable()
+      .then(result => setDocumentary(result))
+      .catch(error => console.error('Error fetching data:', error));
+  }, [isFocused, showForm]);
+
+  useEffect(() => {
+    if (!userID || !isConnected || documentary.length === 0) return;
+    firestore()
+      .collection('documentaries')
+      .doc(userID)
+      .set({watchlist: documentary})
+      .catch(error =>
+        console.error('Error syncing watchlist to Firestore:', error),
+      );
+  }, [documentary, userID, isConnected]);
+
   const handleSaveData = data => {
-    console.log('going to add this data', data);
     dbase.transaction(tx => {
       tx.executeSql(
         'INSERT INTO documentaries (name, watchState, language, year) VALUES (?, ?, ?, ?)',
         [data.name, data.watchState, data.language, data.year],
-        (_, results) => {
-          console.log('Data saved successfully', results);
-        },
-        error => {
-          console.error('Error saving data:', error);
-        },
+        () => {},
+        error => console.error('Error saving data:', error),
       );
     });
   };
 
-  useEffect(() => {
-    // Fetch data from the table when the component mounts
-    fetchDataFromTable()
-      .then(result => {
-        setDocumentary(result);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }, [isFocused, showTrue]);
-  console.log('DOCUMENTARIES', documentary);
+  const handleEdit = useCallback(data => {
+    dbase.transaction(tx => {
+      tx.executeSql(
+        'UPDATE documentaries SET name=?, watchState=?, language=?, year=? WHERE id=?',
+        [data.name, data.watchState, data.language, data.year, selectedItem.id],
+        () => setSelectedItem(null),
+        error => console.error('Error updating data:', error),
+      );
+    });
+  }, [selectedItem]);
 
-  useEffect(() => {
-    if (documentary.length > 0) {
-      firestore()
-        .collection('documentaries')
-        .doc(userID)
-        .set({
-          watchlist: documentary,
-        })
-        .then(() => {
-          console.log('User watchlist added to Firestore!');
-        })
-        .catch(error => {
-          console.error('Error adding user watchlist to Firestore:', error);
-        });
-    } else {
-      console.log('No documents in array');
-    }
-  }, [documentary, userID]);
-
-  const handleDelete = itemId => {
-    Alert.alert('Hey', 'Do you want to delete?', [
+  const handleDelete = useCallback(itemId => {
+    Alert.alert('Delete', 'Remove this entry?', [
       {
-        text: 'Yes',
+        text: 'Delete',
+        style: 'destructive',
         onPress: () => {
           dbase.transaction(tx => {
             tx.executeSql(
               'DELETE FROM documentaries WHERE id = ?',
               [itemId],
-              (_, result) => {
-                console.log(`Deleted item with id ${itemId}`);
-                // After successful deletion, you can update the state to reflect the changes
-                // For example, you can refetch the data from the database and update the state
+              () =>
                 fetchDataFromTable()
-                  .then(result => {
-                    setDocumentary(result);
-                  })
-                  .catch(error => {
-                    console.error('Error fetching data:', error);
-                  });
-              },
-              error => {
-                console.error(`Error deleting item with id ${itemId}:`, error);
-              },
+                  .then(result => setDocumentary(result))
+                  .catch(error => console.error('Error fetching data:', error)),
+              error =>
+                console.error(`Error deleting item ${itemId}:`, error),
             );
           });
         },
       },
-      {
-        text: 'Cancel',
-        onPress: () => {
-          console.log('DELETING CANCELLED');
-        },
-      },
+      {text: 'Cancel'},
     ]);
-  };
-  const handleLogout = () => {
-    Alert.alert('Hey', 'Do you want to log out?', [
-      {
-        text: 'Yes',
-        onPress: () => {
-          auth()
-            .signOut()
-            .then(() => {
-              console.log('User signed out!');
-              navigation.dispatch(StackActions.replace('Login'));
-            });
-        },
-      },
-      {
-        text: 'cancel',
-        onPress: () => {
-          console.log('logout cancelled');
-        },
-      },
-    ]);
-  };
+  }, []);
 
-  const handleEditdata = itemId => {
-    Alert.alert('Hey', 'Do you want to edit the data?', [
+  const handleEditPrompt = useCallback(itemId => {
+    Alert.alert('Edit', 'Edit this entry?', [
       {
-        text: 'Yes',
+        text: 'Edit',
         onPress: () => {
           dbase.transaction(tx => {
             tx.executeSql(
@@ -164,145 +115,223 @@ const HomeScreen = ({route, navigation}) => {
               [itemId],
               (_, result) => {
                 if (result.rows.length > 0) {
-                  const itemData = result.rows.item(0);
-                  setSelectedItem(itemData);
-                  setshowTrue(true);
+                  setSelectedItem(result.rows.item(0));
+                  setShowForm(true);
                 } else {
-                  console.error(`Item with id ${itemId} not found`);
+                  console.error(`Item ${itemId} not found`);
                 }
               },
-              error => {
-                console.error(`Error fetching item with id ${itemId}:`, error);
-              },
+              error => console.error(`Error fetching item ${itemId}:`, error),
             );
           });
         },
       },
-      {
-        text: 'cancel',
-        onPress: () => {
-          console.log('editing cancelled');
-        },
-      },
+      {text: 'Cancel'},
     ]);
-  };
-  const handleEdit = data => {
-    dbase.transaction(tx => {
-      tx.executeSql(
-        'UPDATE documentaries SET name =?,watchState = ?, language = ?, year = ? WHERE id= ?',
-        [data.name, data.watchState, data.language, data.year, selectedItem.id],
-        (_, results) => {
-          console.log('Data updated successfully', results);
-          setSelectedItem(null);
+  }, []);
 
-          // successCallback(results);
-        },
-        error => {
-          console.error('Error updating data:', error);
-        },
-      );
-    });
-  };
+  const renderItem = useCallback(({item}) => {
+    const accent = stateColor(item.watchState);
+    return (
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onLongPress={() => handleEditPrompt(item.id)}>
+        <View style={styles.card}>
+          <View style={[styles.cardAccent, {backgroundColor: accent}]} />
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <View style={styles.cardMeta}>
+              <View
+                style={[
+                  styles.badge,
+                  {backgroundColor: accent + '28'},
+                ]}>
+                <Text style={[styles.badgeText, {color: accent}]}>
+                  {item.watchState || 'unset'}
+                </Text>
+              </View>
+              {!!item.language && (
+                <View style={styles.metaPill}>
+                  <Icon
+                    name="language-outline"
+                    size={11}
+                    color={theme.textMuted}
+                  />
+                  <Text style={styles.metaText}>{item.language}</Text>
+                </View>
+              )}
+              {!!item.year && (
+                <View style={styles.metaPill}>
+                  <Icon
+                    name="calendar-outline"
+                    size={11}
+                    color={theme.textMuted}
+                  />
+                  <Text style={styles.metaText}>{item.year}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={() => handleDelete(item.id)}>
+            <Icon name="trash-outline" size={18} color={theme.textDim} />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  }, [handleDelete, handleEditPrompt]);
+
+  const renderEmpty = () => (
+    <View style={styles.empty}>
+      <Icon name="film-outline" size={64} color={theme.textDim} />
+      <Text style={styles.emptyTitle}>No documentaries yet</Text>
+      <Text style={styles.emptySubtitle}>Tap + to start tracking</Text>
+    </View>
+  );
+
   return (
-    // <View>
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: 'white',
-        // margin: 15,
-        padding: 15,
-      }}>
-      {/* <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
-        <Icon name="menu" size={20} />
-      </TouchableOpacity> */}
-      <Header
-        onClickLeftIcon={() => navigation.toggleDrawer()}
-        title={'Home'}
-      />
-
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={theme.bg} />
+      <View style={styles.headerWrapper}>
+        <Header
+          title="My Watchlog"
+          onClickLeftIcon={() => navigation.toggleDrawer()}
+        />
+      </View>
       <FlatList
         data={documentary}
         keyExtractor={item => item.id.toString()}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            onPress={() => {
-              // navigation.navigate('Utelly');
-            }}
-            onLongPress={() => handleEditdata(item.id)}>
-            <View
-              style={{
-                flexDirection: 'row',
-                borderWidth: 1,
-                marginBottom: 5,
-                borderColor: 'black',
-                backgroundColor: '#ADF7B6',
-                borderRadius: 5,
-              }}>
-              <TouchableOpacity
-                onPress={() => handleDelete(item.id)}
-                style={{position: 'absolute', top: 5, right: 5}}>
-                <Icon name="trash-outline" size={24} color="black" />
-              </TouchableOpacity>
-
-              <View style={{padding: 3}}>
-                <Text style={styles.Text}>Name: </Text>
-                <Text style={styles.Text}>Status: </Text>
-                <Text style={styles.Text}>Language: </Text>
-                <Text style={styles.Text}>Year: </Text>
-              </View>
-              <View style={{marginLeft: 10}}>
-                <Text style={styles.Text2}> {item.name}</Text>
-                <Text style={styles.Text2}> {item.watchState}</Text>
-                <Text style={styles.Text2}> {item.language}</Text>
-                <Text style={styles.Text2}> {item.year}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={renderItem}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={
+          documentary.length === 0 ? styles.listEmpty : styles.list
+        }
+        showsVerticalScrollIndicator={false}
       />
-      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <TouchableOpacity style={styles.plus} onPress={() => addDocumentary()}>
-          <Text style={{fontSize: 24, color: 'white'}}>+</Text>
-        </TouchableOpacity>
-        {/* <TouchableOpacity
-          style={styles.plus}
-          onPress={() => {
-            handleLogout();
-          }}>
-          <Icon name="log-out" size={30} color="white" />
-        </TouchableOpacity> */}
-      </View>
-
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => {
+          setSelectedItem(null);
+          setShowForm(true);
+        }}
+        activeOpacity={0.85}>
+        <Icon name="add" size={28} color="#fff" />
+      </TouchableOpacity>
       <FormComponent
-        visible={showTrue}
+        visible={showForm}
         onSave={selectedItem ? handleEdit : handleSaveData}
-        onClose={handleCloseForm}
+        onClose={() => setShowForm(false)}
         initialData={selectedItem}
       />
     </View>
-    // </View>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  plus: {
-    width: 40,
-    height: 40,
-    borderRadius: 40,
-    backgroundColor: theme.main,
+  container: {
+    flex: 1,
+    backgroundColor: theme.bg,
+  },
+  headerWrapper: {
+    paddingHorizontal: 16,
+  },
+  list: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+  listEmpty: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+  },
+  card: {
+    flexDirection: 'row',
+    backgroundColor: theme.card,
+    borderRadius: 12,
+    marginBottom: 10,
+    overflow: 'hidden',
+    minHeight: 72,
+    alignItems: 'center',
+  },
+  cardAccent: {
+    width: 4,
+    alignSelf: 'stretch',
+  },
+  cardContent: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  cardTitle: {
+    color: theme.text,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  metaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  metaText: {
+    color: theme.textMuted,
+    fontSize: 12,
+  },
+  deleteBtn: {
+    padding: 16,
+  },
+  empty: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 80,
   },
-  Text: {
+  emptyTitle: {
+    color: theme.textMuted,
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#00A676',
-    fontStyle: 'italic',
+    fontWeight: '600',
+    marginTop: 16,
   },
-  Text2: {
-    fontSize: 18,
-    color: 'black',
+  emptySubtitle: {
+    color: theme.textDim,
+    fontSize: 14,
+    marginTop: 6,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 28,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: theme.primary,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
 });

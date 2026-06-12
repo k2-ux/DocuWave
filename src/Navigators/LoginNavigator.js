@@ -1,12 +1,11 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {Text, View, ActivityIndicator, StatusBar} from 'react-native';
 import React, {useState, useEffect} from 'react';
+import {theme} from '../components/theme';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Login from '../Screens/Login';
 import Registration from '../Screens/Registration';
-import HomeScreen from '../Screens/HomeScreen';
 import auth from '@react-native-firebase/auth';
-import Utelly from '../Screens/ExploreMovies';
 import DrawerNavigator from './DrawerNavigator';
 import DocumentaryDetail from '../Screens/DocumentaryDetail';
 import ExploreMovies from '../Screens/ExploreMovies';
@@ -15,39 +14,30 @@ const Stack = createNativeStackNavigator();
 
 const LoginNavigator = () => {
   const [isUserLoggedin, setIsUserLoggedIn] = useState(false);
-  const [initialscreen, setinitialscreen] = useState("Loading");
-  const unsubscribe = () => {
-    auth().onAuthStateChanged(user => {
-      console.log('user DETAIL',user);
-      if (user) {
-        setIsUserLoggedIn(true);
-        setinitialscreen('Home');
-      } else {
-        setIsUserLoggedIn(false);
-        setinitialscreen('Login');
-      }
-    });
-  };
+  const [initialscreen, setinitialscreen] = useState('Loading');
 
   useEffect(() => {
-    unsubscribe();
+    return auth().onAuthStateChanged(user => {
+      setIsUserLoggedIn(!!user);
+      setinitialscreen(user ? 'Home' : 'Login');
+    });
   }, []);
 
-  // Don't forget to unsubscribe when the component unmounts
-
-  console.log('issssssssss', isUserLoggedin, initialscreen);
   if (initialscreen === 'Loading') {
     return (
-      <View>
-        <Text>Loading...</Text>
+      <View style={{flex: 1, backgroundColor: theme.bg, justifyContent: 'center', alignItems: 'center'}}>
+        <StatusBar barStyle="light-content" backgroundColor={theme.bg} />
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={{color: theme.textMuted, marginTop: 12, fontSize: 14}}>
+          Loading…
+        </Text>
       </View>
     );
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={isUserLoggedin ? "Home" : "Login"}>
-       
+      <Stack.Navigator initialRouteName={isUserLoggedin ? 'Home' : 'Login'}>
         <Stack.Screen
           name="Login"
           component={Login}
@@ -58,33 +48,27 @@ const LoginNavigator = () => {
           component={Registration}
           options={{headerShown: false}}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="Home"
           component={DrawerNavigator}
-          options={{
-            headerShown:false,
-            headerTitle: 'DocuWave',
-            headerBackVisible: false,
-            headerTitleAlign: 'center',
-          }}
+          options={{headerShown: false}}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="ExploreMovies"
           component={ExploreMovies}
           options={{
-            // headerShown:false,
-            // headerTitle: 'DocuWave',
-            // headerBackVisible: false,
+            headerStyle: {backgroundColor: theme.bg},
+            headerTintColor: theme.text,
             headerTitleAlign: 'center',
           }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="DocumentaryDetail"
           component={DocumentaryDetail}
           options={{
-            // headerShown:false,
+            headerStyle: {backgroundColor: theme.bg},
+            headerTintColor: theme.text,
             headerTitle: 'Details',
-            // headerBackVisible: false,
             headerTitleAlign: 'center',
           }}
         />
@@ -94,5 +78,3 @@ const LoginNavigator = () => {
 };
 
 export default LoginNavigator;
-
-const styles = StyleSheet.create({});

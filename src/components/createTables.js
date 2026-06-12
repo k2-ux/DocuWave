@@ -8,11 +8,9 @@ const createTables = () => {
       txn.executeSql(
         'CREATE TABLE IF NOT EXISTS documentaries(id INTEGER PRIMARY KEY AUTOINCREMENT,name VARCHAR(20),watchState VARCHAR(55),language VARCHAR(20),year VARCHAR(20))',
         [],
-        (_, results) => {
-          console.log('table created successfully');
-        },
+        () => {},
         error => {
-          console.log('error in creating table' + error.message);
+          console.error('Error creating table:', error.message);
         },
       );
     });

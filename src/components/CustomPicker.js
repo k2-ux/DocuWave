@@ -1,18 +1,26 @@
 import React from 'react';
-import { Picker } from '@react-native-picker/picker';
+import {Picker} from '@react-native-picker/picker';
+import {theme} from './theme';
 
-const CustomPicker = ({ label, value, onValueChange, items }) => {
-  return (
-    <Picker
-      selectedValue={value}
-      onValueChange={onValueChange}
-      style={{ backgroundColor:"#FAE6FA"}}
-    >
-      {items.map((item) => (
-        <Picker.Item key={item.value} value={item.value} label={item.label} style={{ fontSize:14,textAlign: 'left',color:!value?'gray':'black' }} />
-      ))}
-    </Picker>
-  );
-};
+const CustomPicker = ({value, onValueChange, items}) => (
+  <Picker
+    selectedValue={value}
+    onValueChange={onValueChange}
+    style={{color: value ? theme.text : theme.textDim}}
+    dropdownIconColor={theme.textMuted}>
+    {items.map(item => (
+      <Picker.Item
+        key={String(item.value)}
+        value={item.value}
+        label={item.label}
+        style={{
+          fontSize: 15,
+          color: theme.text,
+          backgroundColor: theme.card,
+        }}
+      />
+    ))}
+  </Picker>
+);
 
 export default CustomPicker;

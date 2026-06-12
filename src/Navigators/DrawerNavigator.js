@@ -1,37 +1,65 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet} from 'react-native';
 import React from 'react';
-
 import {createDrawerNavigator} from '@react-navigation/drawer';
-import Article from '../Screens/Article';
-import {NavigationContainer} from '@react-navigation/native';
 import HomeScreen from '../Screens/HomeScreen';
 import CustomDrawer from '../components/CustomDrawer';
-import Icon from 'react-native-vector-icons/Ionicons'
-import Utelly from '../Screens/ExploreMovies';
+import Icon from 'react-native-vector-icons/Ionicons';
+import ExploreMovies from '../Screens/ExploreMovies';
 import WatchList from '../Screens/WatchList';
-import { theme } from '../components/theme';
+import {theme} from '../components/theme';
 
 const Drawer = createDrawerNavigator();
 
-const DrawerNavigator = () => {
-  return (
-    // <NavigationContainer>
-    <Drawer.Navigator drawerContent={props=><CustomDrawer{...props}/>} 
+const DrawerNavigator = () => (
+  <Drawer.Navigator
+    drawerContent={props => <CustomDrawer {...props} />}
     screenOptions={{
-      headerShown:false,
-      drawerActiveBackgroundColor:theme.main,
-      drawerActiveTintColor:'white',
-      drawerInactiveTintColor:'#333'
-
-    }}
-    >
-      <Drawer.Screen name="HomeDrawer" component={HomeScreen}  options={{ title: 'Home' ,drawerIcon:()=>(<Icon name='home' size={20}/>)}} />
-      <Drawer.Screen name="Watch List" component={WatchList}  options={{ title: 'Watch List' ,drawerIcon:()=>(<Icon name='logo-bitbucket' size={20}/>)}}/>
-      <Drawer.Screen name="Article" component={Utelly}  options={{ title: 'Explore' ,drawerIcon:()=>(<Icon name='search' size={20}/>)}}/>
-    </Drawer.Navigator>
-    // </NavigationContainer>/
-  );
-};
+      headerShown: false,
+      drawerStyle: {
+        backgroundColor: theme.surface,
+        width: 280,
+      },
+      drawerActiveBackgroundColor: theme.primary + '22',
+      drawerActiveTintColor: theme.primary,
+      drawerInactiveTintColor: theme.textMuted,
+      drawerLabelStyle: {
+        fontSize: 15,
+        fontWeight: '600',
+        marginLeft: -8,
+      },
+    }}>
+    <Drawer.Screen
+      name="HomeDrawer"
+      component={HomeScreen}
+      options={{
+        title: 'Home',
+        drawerIcon: ({color}) => (
+          <Icon name="home-outline" size={20} color={color} />
+        ),
+      }}
+    />
+    <Drawer.Screen
+      name="Watch List"
+      component={WatchList}
+      options={{
+        title: 'Watchlist',
+        drawerIcon: ({color}) => (
+          <Icon name="bookmark-outline" size={20} color={color} />
+        ),
+      }}
+    />
+    <Drawer.Screen
+      name="Article"
+      component={ExploreMovies}
+      options={{
+        title: 'Explore',
+        drawerIcon: ({color}) => (
+          <Icon name="search-outline" size={20} color={color} />
+        ),
+      }}
+    />
+  </Drawer.Navigator>
+);
 
 export default DrawerNavigator;
 
