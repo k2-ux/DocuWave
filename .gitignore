@@ -39,7 +39,7 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
-yarn.lock
+package-lock.json
 
 # fastlane
 #
@@ -65,3 +65,8 @@ yarn.lock
 
 # testing
 /coverage
+
+# Environment variables — never commit these
+.env
+.env.local
+.env.*
